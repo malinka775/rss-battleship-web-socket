@@ -1,5 +1,5 @@
-import { createWebSocketStream, WebSocketServer, WebSocket } from "ws";
-import {ClientMessage, ClientMessageTypes, ServerMessageTypes, User} from "./interfaces.ts";
+import { WebSocketServer, WebSocket } from "ws";
+import {ClientMessage, ClientMessageTypes, ServerMessageTypes} from "./interfaces.ts";
 import { addShips, attack, createGame, createRoom, getRoomPlayers, regUser, updateRoom, updateWinners } from "./db/users.ts";
 import { UUID } from "node:crypto";
 
@@ -21,9 +21,7 @@ export const startWS = () => {
     ws.on('message', (message) => {
       const {type, data, id} = JSON.parse(message.toString()) as ClientMessage;
 
-      console.log(type, data, id)
-
-      if (type === ClientMessageTypes.REG_USER) { //TODO: send upd_room and upd_winners with data: "[]",
+      if (type === ClientMessageTypes.REG_USER) {
         const user = JSON.parse(data);
         const {userData, roomData} = regUser(user);
 
@@ -50,9 +48,6 @@ export const startWS = () => {
         clients[currentUserId] = ws;
         ws.send(roomMessage);
         ws.send(winnersMessage);
-
-        console.log('clients', clients);
-
       }
 
       if(type === ClientMessageTypes.CREATE_ROOM) { //TODO: send upd_room with room data
@@ -88,7 +83,6 @@ export const startWS = () => {
           }
           const {playerIds, toPlayers, toAll} = createGame(roomId, currentUserId);
           playerIds.forEach((playerId) => {
-            console.log('trying to reach clients by id', playerId)
             clients[playerId].send(JSON.stringify({
               type: ServerMessageTypes.CREATE_GAME,
               data: JSON.stringify(toPlayers[playerId]),

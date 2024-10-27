@@ -61,7 +61,6 @@ type AttackStatus = "miss"|"killed"|"shot";
 
 export const regUser = (user: User): {userData: UserRegResponse, roomData: Room[]} => {
   const id = randomUUID();
-  console.log('rooms,', Object.values(rooms));
   users[id] = user;
   return {
     userData: {
@@ -114,7 +113,6 @@ export const createGame = (roomId: UUID, userId: UUID) => {
   updateRoom(roomId, userId);
   const fullRoom = rooms[roomId];
   const [userId_1, userId_2] = fullRoom.roomUsers.map((user) => user.index);
-  console.log('userIds', userId_1, userId_2);
   games[roomId] = {
     gameId: fullRoom.roomId,
     gameUsers: fullRoom.roomUsers,
@@ -140,9 +138,6 @@ export const createGame = (roomId: UUID, userId: UUID) => {
 }
 
 export const addShips = (gameId: UUID, ships: RawShip[], userId:UUID) => {
-  console.log('---------')
-  console.log('ADD_SHIPS!!!!!')
-  console.log('---------')
   const currentGame = games[gameId];
   if (!currentGame.ships) {
     currentGame.ships = {};
@@ -170,7 +165,6 @@ export const addShips = (gameId: UUID, ships: RawShip[], userId:UUID) => {
   if(Object.keys(currentGame.ships).length > 1){
     const [userId_1, userId_2] = Object.keys(currentGame.ships) as UUID[];
     currentGame.gameUserIds = [userId_1, userId_2];
-    console.log('ADD_SHIPS, userIds', [userId_1, userId_2]);
     currentGame.turn = userId_1;
     return {
       isGameStart: true,
@@ -201,32 +195,20 @@ export const addShips = (gameId: UUID, ships: RawShip[], userId:UUID) => {
 
 export const attack = (gameId: UUID, x: number, y: number, playerId: UUID) => {
   const currentGame = games[gameId];
-  console.log('-------')
-  console.log('shooting player', playerId)
-  console.log('-------')
-
-  console.log('-------')
-  console.log('currentGame.turn', currentGame.turn)
-  console.log('-------')
 
   if(playerId !== currentGame.turn) {
-    console.log('-------')
-    console.log('shooting player !== currentGame.turn?', playerId !== currentGame.turn)
-    console.log('-------')
     return
   }
 
   const underAttackPlayerId = currentGame.gameUserIds.find((id) => id !== playerId)!;
-
-  console.log('-------')
-  console.log('underAttackPlayerId', underAttackPlayerId)
-  console.log('-------')
   let attackStatus: AttackStatus;
   let nextTurnId = playerId;
   let deactivatedCellsAround: any[] = [];
-  let isFinished = false;  
+  let isFinished = false;
+
   const attackTargetShip = currentGame.ships![underAttackPlayerId].find((ship) => {
     const coordinate = ship.coordinates.find((coordinates) => coordinates.x === x && coordinates.y === y)
+
     if(coordinate) {
       coordinate.alive = false;
     }
@@ -241,13 +223,9 @@ export const attack = (gameId: UUID, x: number, y: number, playerId: UUID) => {
         const shipY = attackTargetShip.coordinates[0].y;
         let shipAroundY:number[] = [];
         const shipXes = attackTargetShip.coordinates.map(({x}) => x)!;
-
-        console.log('shipXes', shipXes)
         let shipAroundX: number[] = [...shipXes];
         const minX = shipXes[0];
-        console.log('minX', minX)
         const maxX = shipXes[attackTargetShip.length - 1];
-        console.log('maxX', maxX)
         if (minX !== 0) {
           shipAroundX.push(minX - 1)
           deactivatedCellsAround.push({
@@ -286,16 +264,12 @@ export const attack = (gameId: UUID, x: number, y: number, playerId: UUID) => {
       } else {
         //Vertical
         const shipX = attackTargetShip.coordinates[0].x;
-        console.log('shipX,', shipX);
         let shipAroundX:number[] = [];
         const shipYs = attackTargetShip.coordinates.map(({y}) => y)!;
 
-        console.log('shipYs', shipYs)
         let shipAroundY: number[] = [...shipYs];
         const minY = shipYs[0];
-        console.log('minY', minY)
         const maxY = shipYs[attackTargetShip.length - 1];
-        console.log('maxY', maxY)
         if (minY !== 0) {
           shipAroundY.push(minY - 1)
           deactivatedCellsAround.push({
@@ -314,11 +288,9 @@ export const attack = (gameId: UUID, x: number, y: number, playerId: UUID) => {
         }
         if (shipX !== 0) {
           shipAroundX.push(shipX - 1)
-          console.log('pushed(shipX - 1), shipAroundX = ', shipAroundX)
         }
         if (shipX !== 9) {
           shipAroundX.push(shipX + 1)
-          console.log('pushed(shipX + 1), shipAroundX = ', shipAroundX)
         }
 
         shipAroundX.forEach((x) => {
@@ -353,9 +325,6 @@ export const attack = (gameId: UUID, x: number, y: number, playerId: UUID) => {
 
   currentGame.turn = nextTurnId;
 
-  console.log('--------')
-  console.log('deactivatedCellsAround', deactivatedCellsAround)
-  console.log('--------')
   return {
     turn: {
       currentPlayer: nextTurnId
