@@ -86,6 +86,13 @@ export const createRoom = (userId: UUID): Room[] => {
 
 export const updateRoom = (roomId: UUID, userId: UUID): Room[] => {
   const room = rooms[roomId];
+  if(
+    room.roomUsers.length === 1 &&
+    room.roomUsers[0].index === userId
+  ) {
+    return Object.values(rooms);
+  }
+
   room.roomUsers.push({
     name: users[userId].name,
     index: userId,
@@ -94,9 +101,13 @@ export const updateRoom = (roomId: UUID, userId: UUID): Room[] => {
   return Object.values(rooms);
 }
 
-export const getRoomPlayersNumber= (roomId: UUID): number => {
-  console.log('from getRoomPlayers', rooms[roomId].roomUsers.length || 0)
-  return rooms[roomId].roomUsers.length || 0
+export const getRoomPlayers = (roomId: UUID): UUID | null => {
+  const isRoomEmpty = rooms[roomId].roomUsers.length === 0
+  if (isRoomEmpty) {
+    return null
+  } else {
+    return rooms[roomId].roomUsers[0].index;
+  }
 }
 
 export const createGame = (roomId: UUID, userId: UUID) => {

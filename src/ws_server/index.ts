@@ -1,6 +1,6 @@
 import { createWebSocketStream, WebSocketServer, WebSocket } from "ws";
 import {ClientMessage, ClientMessageTypes, ServerMessageTypes, User} from "./interfaces.ts";
-import { addShips, attack, createGame, createRoom, getRoomPlayersNumber, regUser, updateRoom, updateWinners } from "./db/users.ts";
+import { addShips, attack, createGame, createRoom, getRoomPlayers, regUser, updateRoom, updateWinners } from "./db/users.ts";
 import { UUID } from "node:crypto";
 
 const port = 3000;
@@ -71,10 +71,9 @@ export const startWS = () => {
         const {data} = JSON.parse(message.toString()) as ClientMessage;
         const roomId = JSON.parse(data).indexRoom;
 
-        const isRoomEmpty = !getRoomPlayersNumber(roomId);
-        console.log('isRoomEmpty',isRoomEmpty);
+        const roomPlayerId = getRoomPlayers(roomId);
 
-        if(isRoomEmpty) {
+        if(!roomPlayerId) {
           const updatedRoom = updateRoom(roomId, currentUserId);
 
           const roomMessage = JSON.stringify({
@@ -84,6 +83,9 @@ export const startWS = () => {
           })
           ws.send(roomMessage);
         } else {
+          if (roomPlayerId === currentUserId) {
+            return;
+          }
           const {playerIds, toPlayers, toAll} = createGame(roomId, currentUserId);
           playerIds.forEach((playerId) => {
             console.log('trying to reach clients by id', playerId)
