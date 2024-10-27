@@ -4,6 +4,12 @@ import { User } from "../interfaces";
 const users : {[key: UUID]: User} = {};
 const rooms: {[key: UUID]: Room } = {};
 const games: {[key: UUID]: Game} = {};
+let winners: Winner[] = [];
+
+interface Winner {
+  name: string,
+  wins: number,
+}
 
 interface RoomUser {
   name: string,
@@ -53,7 +59,7 @@ interface ShipWithCoordinates extends RawShip {
 
 type AttackStatus = "miss"|"killed"|"shot";
 
-export const regUser = (user: User): {userData: UserRegResponse, roomData: Room[], winnerData: WinnersResponseItem[]} => {
+export const regUser = (user: User): {userData: UserRegResponse, roomData: Room[]} => {
   const id = randomUUID();
   console.log('rooms,', Object.values(rooms));
   users[id] = user;
@@ -65,7 +71,6 @@ export const regUser = (user: User): {userData: UserRegResponse, roomData: Room[
       errorText: '',
     },
     roomData: Object.values(rooms),
-    winnerData: [],
   }
 }
 
@@ -345,12 +350,6 @@ export const attack = (gameId: UUID, x: number, y: number, playerId: UUID) => {
       currentPlayer: nextTurnId
     },
     isFinished,
-    updateWinners:[
-                    {
-                      name: users[playerId].name,
-                      wins: users[playerId].wins,
-                    }
-                  ],
     attackResult: {
       position: {
         x,
@@ -362,4 +361,12 @@ export const attack = (gameId: UUID, x: number, y: number, playerId: UUID) => {
     deactivatedCellsAround,
     playerIds: currentGame.gameUserIds,
   }
+}
+
+export const updateWinners = (): Winner[] => {
+  const usersCopy = JSON.parse(JSON.stringify(users)) as {[key: UUID]: User};
+  winners = Object.values(usersCopy).filter(user => !!user.wins).map(({name, wins}) => ({name, wins})) as Winner[];
+  winners.sort((w1, w2) => w1.wins - w2.wins)
+
+  return winners;
 }

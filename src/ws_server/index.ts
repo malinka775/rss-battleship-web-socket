@@ -1,6 +1,6 @@
 import { createWebSocketStream, WebSocketServer, WebSocket } from "ws";
 import {ClientMessage, ClientMessageTypes, ServerMessageTypes, User} from "./interfaces.ts";
-import { addShips, attack, createGame, createRoom, getRoomPlayersNumber, regUser, updateRoom } from "./db/users.ts";
+import { addShips, attack, createGame, createRoom, getRoomPlayersNumber, regUser, updateRoom, updateWinners } from "./db/users.ts";
 import { UUID } from "node:crypto";
 
 const port = 3000;
@@ -25,7 +25,7 @@ export const startWS = () => {
 
       if (type === ClientMessageTypes.REG_USER) { //TODO: send upd_room and upd_winners with data: "[]",
         const user = JSON.parse(data);
-        const {userData, roomData, winnerData} = regUser(user);
+        const {userData, roomData} = regUser(user);
 
         const userMessage = JSON.stringify({
           type: ServerMessageTypes.REG_USER,
@@ -38,10 +38,10 @@ export const startWS = () => {
           data: JSON.stringify(roomData),
           id: 0,
         })
-
+        const winners = updateWinners();
         const winnersMessage = JSON.stringify({
           type: ServerMessageTypes.UPD_WINNERS,
-          data: JSON.stringify(winnerData),
+          data: JSON.stringify(winners),
           id: 0,
         })
 
@@ -170,6 +170,16 @@ export const startWS = () => {
               }))
             }
           })
+          if(isFinished) {
+            const winners = updateWinners();
+            Object.values(clients).forEach((client) => {
+              client.send(JSON.stringify({
+                type: ServerMessageTypes.UPD_WINNERS,
+                data: JSON.stringify(winners),
+                id: 0,
+              }))
+            })
+          }
         }
       }
     })
