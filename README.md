@@ -12,12 +12,14 @@
 `npm run start:dev`
 
 * App served @ `http://localhost:8181` with nodemon
-
-**Production**
+* Websocket server served @ `http://localhost:3000` with nodemon
+* Ports for servers could be defined in .env file (you can copy contents of .env.example)
 
 `npm run start`
 
 * App served @ `http://localhost:8181` without nodemon
+* Websocket server served @ `http://localhost:3000` without nodemon
+* Ports for servers could be defined in .env file (you can copy contents of .env.example)
 
 ---
 
@@ -25,7 +27,7 @@
 
 Command | Description
 --- | ---
-`npm run start:dev` | App served @ `http://localhost:8181` with nodemon
-`npm run start` | App served @ `http://localhost:8181` without nodemon
+`npm run start:dev` | App served @ `http://localhost:8181`, Websocket server served @ `http://localhost:3000` with nodemon
+`npm run start` | App served @ `http://localhost:8181`, Websocket server served @ `http://localhost:3000` without nodemon
 
-**Note**: replace `npm` with `yarn` in `package.json` if you use yarn.
+**Note**: Ports for servers could be defined in .env file (you can copy contents of .env.example)

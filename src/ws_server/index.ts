@@ -5,11 +5,10 @@ import { UUID } from "node:crypto";
 import { createRoom, getRoomPlayers, updateRooms } from "./db/rooms.ts";
 import { addShips, attack, createGame, getRandomEnemyCoordinates } from "./db/games.ts";
 
-const port = 3000;
 
 const clients: Record<UUID, WebSocket> = {}
 
-export const startWS = () => {
+export const startWS = (port: number) => {
   const wss = new WebSocketServer({port});
 
   console.log('web socket server runs on port ', port);
