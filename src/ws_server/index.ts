@@ -1,13 +1,13 @@
 import { WebSocketServer, WebSocket } from "ws";
-import {ClientMessage, ClientMessageTypes, ServerMessageTypes} from "./interfaces.ts";
-import { addShips, attack, createGame, createRoom, getRandomEnemyCoordinates, getRoomPlayers, randomAttack, regUser, updateRoom, updateRooms, updateWinners } from "./db/users.ts";
+import { ClientMessage, ClientMessageTypes, ServerMessageTypes } from "./interfaces.ts";
+import { regUser, getWinners } from "./db/users.ts";
 import { UUID } from "node:crypto";
+import { createRoom, getRoomPlayers, updateRooms } from "./db/rooms.ts";
+import { addShips, attack, createGame, getRandomEnemyCoordinates } from "./db/games.ts";
 
 const port = 3000;
 
-const clients: Record<UUID, WebSocket> = {
-
-}
+const clients: Record<UUID, WebSocket> = {}
 
 export const startWS = () => {
   const wss = new WebSocketServer({port});
@@ -17,7 +17,7 @@ export const startWS = () => {
   wss.on('connection', (ws) => {
     let currentUserId: UUID;
     console.log('new client connected!');
-    //handle new connections
+
     ws.on('message', (message) => {
       const {type, data, id} = JSON.parse(message.toString()) as ClientMessage;
 
@@ -36,7 +36,7 @@ export const startWS = () => {
           data: JSON.stringify(roomData),
           id: 0,
         })
-        const winners = updateWinners();
+        const winners = getWinners();
         const winnersMessage = JSON.stringify({
           type: ServerMessageTypes.UPD_WINNERS,
           data: JSON.stringify(winners),
@@ -50,8 +50,8 @@ export const startWS = () => {
         ws.send(winnersMessage);
       }
 
-      if(type === ClientMessageTypes.CREATE_ROOM) { //TODO: send upd_room with room data
-        const roomData = createRoom(currentUserId!); //TODO: remove mock
+      if(type === ClientMessageTypes.CREATE_ROOM) {
+        const roomData = createRoom(currentUserId!);
         const roomMessage = JSON.stringify({
           type: ServerMessageTypes.UPD_ROOM,
           data: JSON.stringify(roomData),
@@ -173,7 +173,7 @@ export const startWS = () => {
             }
           })
           if(isFinished) {
-            const winners = updateWinners();
+            const winners = getWinners();
             Object.values(clients).forEach((client) => {
               client.send(JSON.stringify({
                 type: ServerMessageTypes.UPD_WINNERS,

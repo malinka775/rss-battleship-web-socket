@@ -1,3 +1,5 @@
+import { UUID } from "node:crypto";
+
 export enum ClientMessageTypes {
   REG_USER = 'reg',
   ADD_USER_TO_ROOM = 'add_user_to_room',
@@ -33,4 +35,9 @@ export interface User {
   name: string,
   password: string,
   wins?: number,
+}
+
+export interface RoomUser {
+  name: string,
+  index: UUID,
 }
