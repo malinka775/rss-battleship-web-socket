@@ -5,7 +5,7 @@ import { startWS } from "./ws_server/index.js";
 
 dotenv.config({ path: resolve(import.meta.dirname, '../.env') });
 
-const HTTP_PORT: number = Number(process.env.HTTP_PORT) || 8000;
+const HTTP_PORT: number = Number(process.env.HTTP_PORT) || 8181;
 const WS_PORT: number = Number(process.env.WS_PORT) || 3000;
 
 console.log(`Start static http server on the ${HTTP_PORT} port!`);
