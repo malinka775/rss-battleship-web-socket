@@ -4,7 +4,7 @@ import { getUserfromUserDB } from "./users";
 
 export const rooms: {[key: UUID]: Room } = {};
 
-interface Room {
+export interface Room {
   roomId: UUID; //room id
   roomUsers: RoomUser[],
 }

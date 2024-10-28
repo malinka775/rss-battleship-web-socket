@@ -77,9 +77,6 @@ export const createGame = (roomId: UUID, userId: UUID) => {
 
   const [userId_1, userId_2] = players.map((player) => player.index)
 
-  console.log('---------')
-  console.log('userId_1, userId_2', userId_1, userId_2)
-  console.log('---------')
   games[roomId] = {
     gameId: roomId,
     gameUsers: players,
@@ -164,12 +161,6 @@ const updatePlayersIntel = (gameId: UUID, playerId: UUID, coordinate: Coordinate
   const currentGame = games[gameId];
   const gamePlayerToUpdate = currentGame.gameUsers.find((user) => user.index === playerId)!;
   const fieldToUpdate = gamePlayerToUpdate.enemyField;
-  console.log('---------')
-  console.log('fieldToUpdate', fieldToUpdate);
-  console.log('coordinate', coordinate);
-  console.log('fieldToUpdate[coordinate.y]', fieldToUpdate[coordinate.y]);
-  console.log('fieldToUpdate[coordinate.y][coordinate.x]', fieldToUpdate[coordinate.y][coordinate.x]);
-  console.log('---------')
 
   if (fieldToUpdate[coordinate.y][coordinate.x].isShot) {
     return false;

@@ -1,6 +1,6 @@
 import { UUID, randomUUID } from "node:crypto";
 import { User } from "../interfaces";
-import { getRoomsArray } from "./rooms";
+import { getRoomsArray, Room } from "./rooms";
 
 const users : {[key: UUID]: User} = {};
 
