@@ -6,7 +6,7 @@
     "type": "module",
     "scripts": {
         "start": "npx tsx src/index.ts",
-        "start:dev": "nodemon",
+        "start:dev": "nodemon"
     },
     "author": "malinka775",
     "keywords": [],
