@@ -19,14 +19,16 @@ interface UserRegResponse {
 }
 
 export const regUser = (user: User): {userData: UserRegResponse, roomData: Room[]} => {
+  const isNameAlreadyTaken = Object.values(users).find(person => person.name === user.name);
+
   const id = randomUUID();
   users[id] = user;
   return {
     userData: {
       name: user.name,
       index: id,
-      error: false,
-      errorText: '',
+      error: !!isNameAlreadyTaken,
+      errorText: isNameAlreadyTaken ? 'This username already taken' : '',
     },
     roomData: getRoomsArray(),
   }
