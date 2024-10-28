@@ -10,6 +10,7 @@ export enum ClientMessageTypes {
   UPD_WINNERS = 'update_winners',
   ADD_SHIPS = 'add_ships',
   RANDOM_ATTACK = 'randomAttack',
+  SINGLE_PLAY = 'single_play',
 }
 
 export enum ServerMessageTypes {

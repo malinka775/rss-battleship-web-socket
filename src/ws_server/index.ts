@@ -74,7 +74,9 @@ export const startWS = (port: number) => {
             data: JSON.stringify(updatedRooms),
             id: 0,
           })
-          ws.send(roomMessage);
+          Object.values(clients).forEach((client) => {
+            client.send(roomMessage)
+          })
         } else {
           if (roomPlayerId === currentUserId) {
             return;
