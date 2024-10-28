@@ -1,6 +1,6 @@
 import { WebSocketServer, WebSocket } from "ws";
 import {ClientMessage, ClientMessageTypes, ServerMessageTypes} from "./interfaces.ts";
-import { addShips, attack, createGame, createRoom, getRoomPlayers, regUser, updateRoom, updateWinners } from "./db/users.ts";
+import { addShips, attack, createGame, createRoom, getRandomEnemyCoordinates, getRoomPlayers, randomAttack, regUser, updateRoom, updateRooms, updateWinners } from "./db/users.ts";
 import { UUID } from "node:crypto";
 
 const port = 3000;
@@ -67,13 +67,12 @@ export const startWS = () => {
         const roomId = JSON.parse(data).indexRoom;
 
         const roomPlayerId = getRoomPlayers(roomId);
+        const updatedRooms = updateRooms(roomId, currentUserId);
 
         if(!roomPlayerId) {
-          const updatedRoom = updateRoom(roomId, currentUserId);
-
           const roomMessage = JSON.stringify({
             type: ServerMessageTypes.UPD_ROOM,
-            data: JSON.stringify(updatedRoom),
+            data: JSON.stringify(updatedRooms),
             id: 0,
           })
           ws.send(roomMessage);
@@ -119,8 +118,15 @@ export const startWS = () => {
         }
       }
 
-      if(type === ClientMessageTypes.ATTACK) {
-        const {gameId, x, y, indexPlayer} = JSON.parse(data);
+      if(type === ClientMessageTypes.ATTACK || type === ClientMessageTypes.RANDOM_ATTACK) {
+        let {gameId, x, y, indexPlayer} = JSON.parse(data);
+        
+        if (type === ClientMessageTypes.RANDOM_ATTACK) {
+          const coordinate = getRandomEnemyCoordinates(gameId, indexPlayer);
+
+          x = coordinate?.x;
+          y = coordinate?.y;
+        }
 
         const result = attack(gameId, x, y, indexPlayer);
         if (result) {

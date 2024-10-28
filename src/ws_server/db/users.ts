@@ -1,5 +1,6 @@
 import { UUID, randomUUID } from "crypto";
 import { User } from "../interfaces";
+import { getRandomIndex } from "../../helpers";
 
 const users : {[key: UUID]: User} = {};
 const rooms: {[key: UUID]: Room } = {};
@@ -16,13 +17,26 @@ interface RoomUser {
   index: UUID,
 }
 
+interface Coordinate {
+  x: number,
+  y: number,
+}
+
+interface GameCoordinate extends Coordinate {
+  isShot: boolean,
+}
+
+interface GamePlayer  extends RoomUser {
+  enemyField: GameCoordinate[][],
+}
+
 interface Room {
   roomId: UUID; //room id
   roomUsers: RoomUser[],
 }
 
 interface Game {
-  gameUsers: RoomUser[];
+  gameUsers: GamePlayer[];
   gameUserIds:UUID[];
   gameId: UUID;
   ships?: {
@@ -83,7 +97,7 @@ export const createRoom = (userId: UUID): Room[] => {
   return Object.values(rooms);
 }
 
-export const updateRoom = (roomId: UUID, userId: UUID): Room[] => {
+export const updateRooms = (roomId: UUID, userId: UUID): Room[] => {
   const room = rooms[roomId];
   if(
     room.roomUsers.length === 1 &&
@@ -109,28 +123,59 @@ export const getRoomPlayers = (roomId: UUID): UUID | null => {
   }
 }
 
+const generateNewGameField = (): GameCoordinate[][] => {
+  let coordinates: GameCoordinate[][] = [];
+  for (let y = 0; y < 10; y++) {
+    let currentLevelCoordinates:GameCoordinate[] = []
+    for (let x = 0; x < 10; x++) {
+      currentLevelCoordinates.push({
+        x,
+        y,
+        isShot: false,
+      })
+    }
+    coordinates.push(currentLevelCoordinates);
+  }
+
+  return coordinates;
+}
+
+export const initiateGamePlayers = (roomId: UUID): GamePlayer[] => {
+  const currentRoom = rooms[roomId];
+
+  const currentPlayers = currentRoom.roomUsers.map((user) => {
+    (user as GamePlayer).enemyField = generateNewGameField();
+    return user as GamePlayer;
+  })
+
+  return currentPlayers
+}
+
 export const createGame = (roomId: UUID, userId: UUID) => {
-  updateRoom(roomId, userId);
-  const fullRoom = rooms[roomId];
-  const [userId_1, userId_2] = fullRoom.roomUsers.map((user) => user.index);
+  const players = initiateGamePlayers(roomId);
+
+  const [userId_1, userId_2] = players.map((player) => player.index)
+
+  console.log('---------')
+  console.log('userId_1, userId_2', userId_1, userId_2)
+  console.log('---------')
   games[roomId] = {
-    gameId: fullRoom.roomId,
-    gameUsers: fullRoom.roomUsers,
+    gameId: roomId,
+    gameUsers: players,
     gameUserIds: [userId_1, userId_2],
   }
   delete rooms[roomId];
-
 
   return {
     playerIds: [userId_1, userId_2],
     toPlayers: {
       [userId_1]: {
         idPlayer: userId_1,
-        idGame: fullRoom.roomId
+        idGame: roomId
       },
       [userId_2]: {
         idPlayer: userId_2,
-        idGame: fullRoom.roomId
+        idGame: roomId
       }
     },
     toAll: Object.values(rooms)
@@ -193,12 +238,35 @@ export const addShips = (gameId: UUID, ships: RawShip[], userId:UUID) => {
   }
 }
 
+const updatePlayersIntel = (gameId: UUID, playerId: UUID, coordinate: Coordinate) : boolean => {
+  const currentGame = games[gameId];
+  const gamePlayerToUpdate = currentGame.gameUsers.find((user) => user.index === playerId)!;
+  const fieldToUpdate = gamePlayerToUpdate.enemyField;
+  console.log('---------')
+  console.log('fieldToUpdate', fieldToUpdate);
+  console.log('coordinate', coordinate);
+  console.log('fieldToUpdate[coordinate.y]', fieldToUpdate[coordinate.y]);
+  console.log('fieldToUpdate[coordinate.y][coordinate.x]', fieldToUpdate[coordinate.y][coordinate.x]);
+  console.log('---------')
+
+  if (fieldToUpdate[coordinate.y][coordinate.x].isShot) {
+    return false;
+  }
+
+  fieldToUpdate[coordinate.y][coordinate.x].isShot = true;
+  return true
+}
+
 export const attack = (gameId: UUID, x: number, y: number, playerId: UUID) => {
   const currentGame = games[gameId];
 
   if(playerId !== currentGame.turn) {
     return
   }
+
+  if(!updatePlayersIntel(gameId, playerId, {x, y})) {
+    return
+  };
 
   const underAttackPlayerId = currentGame.gameUserIds.find((id) => id !== playerId)!;
   let attackStatus: AttackStatus;
@@ -306,6 +374,7 @@ export const attack = (gameId: UUID, x: number, y: number, playerId: UUID) => {
           })
         })
       }
+      deactivatedCellsAround.forEach((cell) => updatePlayersIntel(gameId, playerId, cell.position))
     }
     const updatedShips = currentGame.ships![underAttackPlayerId].filter((ship) => {
       return !ship.coordinates.every((item) => !item.alive)
@@ -324,7 +393,6 @@ export const attack = (gameId: UUID, x: number, y: number, playerId: UUID) => {
   }
 
   currentGame.turn = nextTurnId;
-
   return {
     turn: {
       currentPlayer: nextTurnId
@@ -341,6 +409,24 @@ export const attack = (gameId: UUID, x: number, y: number, playerId: UUID) => {
     deactivatedCellsAround,
     playerIds: currentGame.gameUserIds,
   }
+}
+
+export const getRandomEnemyCoordinates = (gameId: UUID, playerId: UUID): Coordinate | null => {
+  const currentGame = games[gameId];
+
+  const currentPlayer = currentGame.gameUsers.find((user) => user.index === playerId) as GamePlayer;
+
+  const enemyPlayerAvailableCoordinates = currentPlayer.enemyField
+  .reduce((acc, coordinates) => acc.concat(coordinates), [])
+  .filter((coordinate) => coordinate.isShot === false);
+
+  if (enemyPlayerAvailableCoordinates.length === 0){
+    return null
+  }
+
+  const randomCellIndex = getRandomIndex(enemyPlayerAvailableCoordinates.length);
+
+  return enemyPlayerAvailableCoordinates[randomCellIndex];
 }
 
 export const updateWinners = (): Winner[] => {
