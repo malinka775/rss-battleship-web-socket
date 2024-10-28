@@ -10,13 +10,25 @@ export interface Room {
 }
 
 export const createRoom = (userId: UUID): Room[] => {
+  const isUserAlreadyInRoom = getRoomsArray().find((room) => room.roomUsers.some((user) => user.index === userId))
+
+  if(isUserAlreadyInRoom) {
+    return getRoomsArray();
+  }
   const roomId = randomUUID();
   const newRoomData = {
     roomId,
     roomUsers: []
   }
   rooms[roomId] = newRoomData;
-  return Object.values(rooms);
+  updateRooms(roomId, userId);
+  return getRoomsArray();
+}
+
+export const getUserRooms = (userId: UUID) => {
+  return getRoomsArray().filter((room) => room.roomUsers
+    .some(user => user.index === userId))
+    .map((room) => room.roomId);
 }
 
 export const updateRooms = (roomId: UUID, userId: UUID): Room[] => {
@@ -25,7 +37,7 @@ export const updateRooms = (roomId: UUID, userId: UUID): Room[] => {
     room.roomUsers.length === 1 &&
     room.roomUsers[0].index === userId
   ) {
-    return Object.values(rooms);
+    return getRoomsArray();
   }
 
   room.roomUsers.push({
@@ -33,7 +45,7 @@ export const updateRooms = (roomId: UUID, userId: UUID): Room[] => {
     index: userId,
   })
 
-  return Object.values(rooms);
+  return getRoomsArray();
 }
 
 export const getRoomPlayers = (roomId: UUID): UUID | null => {
@@ -56,5 +68,5 @@ export const getRoomById = (id: UUID): Room => {
 export const deleteRoomById = (id: UUID): Room[] => {
   delete rooms[id];
 
-  return Object.values(rooms);
+  return getRoomsArray();
 }

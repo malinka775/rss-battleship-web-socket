@@ -1,6 +1,6 @@
 import { UUID } from "node:crypto";
 import { RoomUser } from "../interfaces";
-import { deleteRoomById, getRoomById } from "./rooms";
+import { deleteRoomById, getRoomById, getRoomsArray, getUserRooms } from "./rooms";
 import { getRandomIndex } from "../../helpers";
 import { incrementUserWins } from "./users";
 
@@ -83,7 +83,12 @@ export const createGame = (roomId: UUID, userId: UUID) => {
     gameUserIds: [userId_1, userId_2],
   }
   
-  const updatedRoomsArray = deleteRoomById(roomId);
+  const roomsToDelete = [...getUserRooms(userId_1), ...getUserRooms(userId_2)];
+  roomsToDelete.forEach(id => {
+    deleteRoomById(id)
+  })
+
+  const updatedRoomsArray = getRoomsArray();
 
   return {
     playerIds: [userId_1, userId_2],
